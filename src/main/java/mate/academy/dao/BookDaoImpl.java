@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import mate.academy.exceptions.DataProcessingException;
 import mate.academy.lib.Dao;
 import mate.academy.model.Book;
 
@@ -19,8 +20,8 @@ public class BookDaoImpl implements BookDao {
     public Book create(Book book) {
         String sql = "INSERT INTO book (title, price) VALUES (?, ?);";
         try (Connection connection = ConnectionUtil.getConnection();
-                PreparedStatement preparedStatement =
-                        connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement preparedStatement = connection.prepareStatement(sql,
+                        Statement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, book.getTitle());
             preparedStatement.setBigDecimal(2, book.getPrice());
@@ -32,15 +33,8 @@ public class BookDaoImpl implements BookDao {
             }
             return book;
         } catch (SQLException e) {
-            throw new RuntimeException("Can't insert book into DB: " + book, e);
+            throw new DataProcessingException("Can't insert book into DB: " + book, e);
         }
-    }
-
-    @Override
-    public Book get(Long id) {
-        return findById(id).orElseThrow(
-                () -> new RuntimeException("Can't find book with id: " + id)
-        );
     }
 
     @Override
@@ -56,7 +50,7 @@ public class BookDaoImpl implements BookDao {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new RuntimeException("Can't get book from DB. ID: " + id, e);
+            throw new DataProcessingException("Can't get book from DB. ID: " + id, e);
         }
     }
 
@@ -73,7 +67,7 @@ public class BookDaoImpl implements BookDao {
             }
             return books;
         } catch (SQLException e) {
-            throw new RuntimeException("Can't retrieve books from DB", e);
+            throw new DataProcessingException("Can't retrieve books from DB", e);
         }
     }
 
@@ -89,11 +83,12 @@ public class BookDaoImpl implements BookDao {
 
             int rowsUpdated = preparedStatement.executeUpdate();
             if (rowsUpdated == 0) {
-                throw new RuntimeException("Update failed, no book found with id: " + book.getId());
+                throw new DataProcessingException("Update failed, no book found with id: "
+                        + book.getId(), null);
             }
             return book;
         } catch (SQLException e) {
-            throw new RuntimeException("Can't update book in DB: " + book, e);
+            throw new DataProcessingException("Can't update book in DB: " + book, e);
         }
     }
 
@@ -106,7 +101,7 @@ public class BookDaoImpl implements BookDao {
             preparedStatement.setLong(1, id);
             return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Can't delete book from DB. ID: " + id, e);
+            throw new DataProcessingException("Can't delete book from DB. ID: " + id, e);
         }
     }
 
@@ -114,7 +109,6 @@ public class BookDaoImpl implements BookDao {
         Long rowId = resultSet.getObject("id", Long.class);
         String title = resultSet.getString("title");
         BigDecimal price = resultSet.getBigDecimal("price");
-
         return new Book(rowId, title, price);
     }
 }

@@ -12,7 +12,7 @@ public class Main {
         Injector injector = Injector.getInstance("mate.academy");
         BookDao bookDao = (BookDao) injector.getInstance(BookDao.class);
 
-        Book newBook = bookDao.get(1L);
+        Book newBook = bookDao.findById(1L).get();
         newBook.setPrice(new BigDecimal("49.99"));
 
         Book savedBook = bookDao.create(newBook);
